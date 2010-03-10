@@ -1,0 +1,53 @@
+pywcreader annotations:
+
+Application: pywcreader
+Project: wcserver (was server, renamed to make more sense)
+
+---------------
+Django setup:
+
+$ django-admin.py startproject pywcreader
+$ ls -la pywcreader/
+total 24
+drwxr-xr-x   6 chester  staff   204 10 Mar 10:24 .
+drwxr-xr-x  10 chester  staff   340 10 Mar 10:24 ..
+-rwxr-xr-x   1 chester  staff     0 10 Mar 10:24 __init__.py
+-rwxr-xr-x   1 chester  staff   546 10 Mar 10:24 manage.py
+-rwxr-xr-x   1 chester  staff  2781 10 Mar 10:24 settings.py
+-rwxr-xr-x   1 chester  staff   550 10 Mar 10:24 urls.py
+$ cd pywcreader
+$ python manage.py startapp server
+(renamed to wcserver afterwards)
+$ ls -la server
+total 24
+drwxr-xr-x   6 chester  staff  204 10 Mar 10:48 .
+drwxr-xr-x  19 chester  staff  646 10 Mar 10:48 ..
+-rwxr-xr-x   1 chester  staff    0 10 Mar 10:48 __init__.py
+-rwxr-xr-x   1 chester  staff   57 10 Mar 10:48 models.py
+-rwxr-xr-x   1 chester  staff  514 10 Mar 10:48 tests.py
+-rwxr-xr-x   1 chester  staff   26 10 Mar 10:48 views.py
+
+---------------
+DB:
+$ python manage.py syncdb
+Creating table wcserver_comic
+Creating table wcserver_episode
+Creating table wcserver_user
+Installing index for wcserver.Episode model
+$ python manage.py shell
+>>> from pywcreader.wcserver.models import Comic,Episode
+>>> c = Comic(name="Questionable Content")
+>>> c.save()
+>>> c.id
+1
+>>> Comic.objects.all()
+[<Comic: Comic object>]
+
+---------------
+The helpers:
+
+lxml (HTML parser): http://codespeak.net/lxml/parsing.html#iterparse-and-iterwalk
+Style Guide: http://www.python.org/dev/peps/pep-0008/
+Django bootstrap: http://docs.djangoproject.com/en/dev/intro/tutorial01/#intro-tutorial01
+Docstrings: http://www.learningpython.com/2010/01/08/introducing-docstrings/
+Openid: http://www.openidenabled.com/python-openid/

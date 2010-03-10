@@ -1,6 +1,7 @@
 """Parses webcomic pages to identify their navigation links and locate archived and new comics"""
 import urllib
 from StringIO import StringIO
+from contextlib import closing
 from lxml import etree
 from lxml import html
 
@@ -8,10 +9,9 @@ def findLinks(source, target):
 	""" Locates all links from the source URL to the target URL, returning a list 
 		of 2-element tuples with each link's xpath and inner HTML """
 	links = []
-	source_socket = urllib.urlopen(source)
-	absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
+	with closing(urllib.urlopen(source)) as source_socket:
+		absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
 	absolute_tree.make_links_absolute()
-	source_socket.close()
 	context = etree.iterwalk(absolute_tree, tag="a")
 	for action, elem in context:
 		if "href" in elem.attrib:
