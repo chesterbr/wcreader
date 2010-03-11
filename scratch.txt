@@ -4,6 +4,13 @@ Application: pywcreader
 Project: wcserver (was server, renamed to make more sense)
 
 ---------------
+Mac OS X:
+sudo port install py26-mysql  NÃO ADIANTOU NADA
+Solução para MySQL: baixar o mysql support, editar o setup_posix.py para ele
+    achar o mysql_config e sudo easy_install .
+
+
+---------------
 Django setup:
 
 $ django-admin.py startproject pywcreader
