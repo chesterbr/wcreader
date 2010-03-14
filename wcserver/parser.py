@@ -20,10 +20,12 @@ def findLinks(source, target):
 				links.append((etree.ElementTree(elem).getpath(elem), elem.text))
 	return links
 
-def getNext(source, xpath, expected_html):
+def getNext(source, xpath, expected_html, title_xpath=None):
 	""" If the link in the xpath contains a link with the expected html and an href that does
 		point somewhere else (i.e., not "#"), returns its href 
-		(which should be the next comic, if that source is a non-last webcomic episode)"""
+		(which should be the next comic, if that source is a non-last webcomic episode).
+		
+		If title_xpath is passed, a tuple with the url and title is returned"""
 	next = None
 	source_socket = urllib.urlopen(source)
 	source_html = html.document_fromstring(source_socket.read(), base_url=source)
@@ -33,7 +35,10 @@ def getNext(source, xpath, expected_html):
 		link = links[0]
 		if link.text == expected_html:
 			""" TODO: checar se nao e # """
-			next = link.attrib["href"]
+			if title_xpath:
+				next = (link.attrib["href"], source_html.xpath(title_xpath)[0].text)
+			else:
+				next = link.attrib["href"]
 	source_socket.close()
 	return next
 	
