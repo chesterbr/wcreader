@@ -51,6 +51,27 @@ $ python manage.py shell
 [<Comic: Comic object>]
 
 ---------------
+Shell:
+$ python manage.py shell
+
+from pywcreader.wcserver.models import Comic, Episode, User
+c=Comic(name="xkcd",strategy="N")
+(c.next_button_xpath,c.next_button_expected_html)=('/html/body/div/div[2]/div[1]/div[2]/div/div/div[1]/ul/li[4]/a', 'Next >')
+c.episode_title_xpath="/html/body/div/div[2]/div/div[2]/div/div/h1"
+c.save()
+e=Episode(title="Barrel - Part 1",url="http://xkcd.com/1/",order=1,comic=c)
+e.save()
+u=User(username="chesterbr")
+u.save()
+
+c.checkNewEpisode()
+c.checkNewEpisode()
+c.checkNewEpisode()
+c.checkNewEpisode()
+c.checkNewEpisode()
+
+c=Comic.objects.all()[0]
+-----
 The helpers:
 
 lxml (HTML parser): http://codespeak.net/lxml/parsing.html#iterparse-and-iterwalk
