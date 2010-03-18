@@ -44,3 +44,7 @@ def getNext(source, xpath, expected_html, title_xpath=None):
     
 def removePrefix(url):
     return url.rpartition("/")[2];
+    
+def findXpathForText(source, text):
+	"""Finds the Xpath that retrieves the first ocurrence of text on the source url"""
+	pass
