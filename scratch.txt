@@ -42,7 +42,7 @@ Creating table wcserver_episode
 Creating table wcserver_user
 Installing index for wcserver.Episode model
 $ python manage.py shell
->>> from pywcreader.wcserver.models import Comic,Episode
+>>> from pywcreader.wcserver.models import Comic,Episode,User
 >>> c = Comic(name="Questionable Content")
 >>> c.save()
 >>> c.id
@@ -50,11 +50,18 @@ $ python manage.py shell
 >>> Comic.objects.all()
 [<Comic: Comic object>]
 
+
 ---------------
 Shell:
 $ python manage.py shell
 
 from pywcreader.wcserver.models import Comic, Episode, User
+from pywcreader.wcserver import parser as p
+from pywcreader.wcserver import models
+
+c=Comic.objects.all()[0]
+u=User.objects.all()[0]
+
 c=Comic(name="xkcd",strategy="N")
 (c.next_button_xpath,c.next_button_expected_html)=('/html/body/div/div[2]/div[1]/div[2]/div/div/div[1]/ul/li[4]/a', 'Next >')
 c.episode_title_xpath="/html/body/div/div[2]/div/div[2]/div/div/h1"
