@@ -1,6 +1,5 @@
 """Parses webcomic pages to identify their navigation links and locate archived and new comics"""
 import urllib
-from StringIO import StringIO
 from contextlib import closing
 from lxml import etree
 from lxml import html
@@ -46,5 +45,5 @@ def removePrefix(url):
     return url.rpartition("/")[2];
     
 def findXpathForText(source, text):
-	"""Finds the Xpath that retrieves the first ocurrence of text on the source url"""
-	pass
+    """Finds the Xpath that retrieves the first ocurrence of text on the source url"""
+    pass

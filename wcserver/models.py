@@ -1,7 +1,6 @@
 ﻿# coding=UTF-8
 
 from django.db import models
-from django.db.models import Max
 import parser
 
 
@@ -69,33 +68,33 @@ class User(models.Model):
     favorite_comics = models.ManyToManyField(Comic)
     
     def read(self, episode):
-    	"""Marks an episode as "read" """
-    	self.read_episodes.add(episode)
-    	last_read = self.last_read_episodes.filter(comic=episode.comic)
-    	if last_read:
-    		self.last_read_episodes.remove(last_read[0])
-    	self.last_read_episodes.add(episode)
-    	
-    	
+        """Marks an episode as "read" """
+        self.read_episodes.add(episode)
+        last_read = self.last_read_episodes.filter(comic=episode.comic)
+        if last_read:
+            self.last_read_episodes.remove(last_read[0])
+        self.last_read_episodes.add(episode)
+        
+        
 def initNextBasedComic(name, url_episode_1, url_episode_2, url_episode_3, title_episode_2):
-	"""Builds the objects for a new next-harvesting-based webcomic.
-	
-	It needs the comic name, URL for the first three episodes and title for the third
-	(to deduce the title xpath)
-	
-	Objects are returned in a tuple (comic, episode1, episode2) and NOT persisted"""
-	c = Comic()
-	c.name = name
-	c.strategy = "N"
-	links = parser.findLinks(url_episode_2, url_episode_3)
-	if links:
-		(c.next_button_xpath,c.next_button_expected_html) = links[0]
-	else:
-		raise ValueError("Can't find link from " + url_episode_2 + " to " + url_episode_3)
-	(e1,e2) = (Episode(),Episode())
-	(e1.comic, e2.comic) = (c,c)
-	(e1.order, e2.order) = (1,2)
-	(e1.title, e2.title) = (title_episode_1, title_episode_2)
-	# todo title xpath
-	return (c,e1,e2)
+    """Builds the objects for a new next-harvesting-based webcomic.
+    
+    It needs the comic name, URL for the first three episodes and title for the third
+    (to deduce the title xpath)
+    
+    Objects are returned in a tuple (comic, episode1, episode2) and NOT persisted"""
+    c = Comic()
+    c.name = name
+    c.strategy = "N"
+    links = parser.findLinks(url_episode_2, url_episode_3)
+    if links:
+        (c.next_button_xpath,c.next_button_expected_html) = links[0]
+    else:
+        raise ValueError("Can't find link from " + url_episode_2 + " to " + url_episode_3)
+    (e1,e2) = (Episode(),Episode())
+    (e1.comic, e2.comic) = (c,c)
+    (e1.order, e2.order) = (1,2)
+    #(e1.title, e2.title) = (title_episode_1, title_episode_2)
+    # todo title xpath
+    return (c,e1,e2)
     

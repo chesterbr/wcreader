@@ -1,5 +1,5 @@
 """WebComic Reader API views"""
-from django.http import HttpResponse, Http404
+from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
 from models import Comic, Episode, User
 
