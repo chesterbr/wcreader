@@ -1,3 +1,3 @@
 *.pyc
-settings_local.py
-db/comicdb
+pywcreader/settings_local.py
+pywcreader/db/comicdb
