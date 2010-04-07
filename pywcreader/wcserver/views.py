@@ -1,5 +1,5 @@
 """WebComic Reader API views"""
-from django.http import Http404
+from django.http import Http404,HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from models import Comic, Episode, User
 
@@ -28,6 +28,11 @@ def readEpisode(request):
         raise Http404 # melhorar isso
 
     user.read(episode)
+    
+def listComics(request):
+    """Lists all available comics"""
+    
+    return HttpResponse("oi") #Comic.objects.all() # consertar, so teste isso
     
     
         
