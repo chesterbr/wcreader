@@ -1,4 +1,12 @@
-pywcreader annotations:
+pywcreader annotations scratch file
+===================================
+
+This file contains random stuff that was useful during development.
+
+Sorry for portuguese comments - it's intended as a personal helper, but I left it with the source in the hope that it may help someone.
+
+
+---------------
 
 Application: pywcreader
 Project: wcserver (was server, renamed to make more sense)
@@ -9,6 +17,21 @@ sudo port install py26-mysql  NÃO ADIANTOU NADA
 Solução para MySQL: baixar o mysql support, editar o setup_posix.py para ele
     achar o mysql_config e sudo easy_install .
 
+
+----------------
+Dreamhost
+- Install python 2.6 - http://wiki.dreamhost.com/Python#Building_a_custom_version_of_Python
+- Use Passenger: http://wiki.dreamhost.com/Passenger_WSGI (be sure to add the interp change there & kill any running process w/ old interp). Final passenger_wsgi.py:
+import sys, os
+INTERP = "/home/wcreader/local/bin/python"
+if sys.executable != INTERP: os.execl(INTERP, INTERP, *sys.argv)
+sys.path.append(os.getcwd())
+os.environ['DJANGO_SETTINGS_MODULE'] = "pywcreader.settings"
+import django.core.handlers.wsgi
+application = django.core.handlers.wsgi.WSGIHandler()
+- Add your own Django (use default install instructions from Django site, not Dreamhosts')
+- Had to build libxml to install lxml. See: http://gsnedders.com/installing-lxml-on-dreamhost
+- Had to build and install mysqlpython: http://stackoverflow.com/questions/1449130/how-to-install-mysqldb-package-importerror-no-module-named-setuptools
 
 ---------------
 Django setup:
@@ -49,6 +72,7 @@ $ python manage.py shell
 1
 >>> Comic.objects.all()
 [<Comic: Comic object>]
+
 
 
 ---------------
