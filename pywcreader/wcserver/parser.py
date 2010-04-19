@@ -25,16 +25,17 @@ def findXpathFor(source, target):
         absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
     absolute_tree.make_links_absolute()
     context = etree.iterwalk(absolute_tree)
+    stripped_target = target.strip()
     for action, elem in context:
-        if elem.text == target:
+        if elem.text and (elem.text.strip() == stripped_target):
             return etree.ElementTree(elem).getpath(elem)
 
 def getTextForXpath(source, xpath):
-    """ Returns the text from the element that matches that xpath on the source URL """
+    """ Returns the space-stripped text from the element that matches that xpath on the source URL """
     with closing(urllib.urlopen(source)) as source_socket:
         tree = html.parse(source_socket, base_url=source)
 #        absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
-    return tree.xpath(xpath)[0].text
+    return tree.xpath(xpath)[0].text.strip()
 
 def getNext(source, xpath, expected_html):
     """ If the link in the xpath contains a link with the expected html and an href that does
