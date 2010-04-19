@@ -1,6 +1,7 @@
 """WebComic Reader API views"""
-from django.http import Http404,HttpResponse
+from django.http import Http404, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import simplejson
 from models import Comic, Episode, User
 
 def lastEpisode(request):
@@ -32,7 +33,11 @@ def readEpisode(request):
 def listComics(request):
     """Lists all available comics"""
     
-    return HttpResponse("oi") #Comic.objects.all() # consertar, so teste isso
+    comics = Comic.objects.all();
+    return HttpResponse(simplejson.dumps([{
+            "name" :  comic.name,
+            "key" :comic.key                               
+        } for comic in comics]))
     
     
         

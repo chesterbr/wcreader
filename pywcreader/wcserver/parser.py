@@ -19,12 +19,27 @@ def findLinks(source, target):
                 links.append((etree.ElementTree(elem).getpath(elem), elem.text))
     return links
 
-def getNext(source, xpath, expected_html, title_xpath=None):
+def findXpathFor(source, target):
+    """ Locates a target within the source URL and returns an xpath of the container element """
+    with closing(urllib.urlopen(source)) as source_socket:
+        absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
+    absolute_tree.make_links_absolute()
+    context = etree.iterwalk(absolute_tree)
+    for action, elem in context:
+        if elem.text == target:
+            return etree.ElementTree(elem).getpath(elem)
+
+def getTextForXpath(source, xpath):
+    """ Returns the text from the element that matches that xpath on the source URL """
+    with closing(urllib.urlopen(source)) as source_socket:
+        tree = html.parse(source_socket, base_url=source)
+#        absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
+    return tree.xpath(xpath)[0].text
+
+def getNext(source, xpath, expected_html):
     """ If the link in the xpath contains a link with the expected html and an href that does
         point somewhere else (i.e., not "#"), returns its href 
-        (which should be the next comic, if that source is a non-last webcomic episode).
-        
-        If title_xpath is passed, a tuple with the url and title is returned"""
+        (which should be the next comic, if that source is a non-last webcomic episode)."""
     next = None
     source_socket = urllib.urlopen(source)
     source_html = html.document_fromstring(source_socket.read(), base_url=source)
@@ -34,16 +49,9 @@ def getNext(source, xpath, expected_html, title_xpath=None):
         link = links[0]
         if link.text == expected_html:
             """ TODO: checar se nao e # """
-            if title_xpath:
-                next = (link.attrib["href"], source_html.xpath(title_xpath)[0].text)
-            else:
-                next = link.attrib["href"]
+            next = link.attrib["href"]
     source_socket.close()
     return next
     
 def removePrefix(url):
     return url.rpartition("/")[2];
-    
-def findXpathForText(source, text):
-    """Finds the Xpath that retrieves the first ocurrence of text on the source url"""
-    pass

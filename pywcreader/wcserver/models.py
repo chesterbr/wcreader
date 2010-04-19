@@ -23,6 +23,7 @@ class Comic(models.Model):
         ("U", "URL pattern")
     )
     name = models.CharField(max_length=255)
+    key = models.CharField(max_length=20)
     strategy = models.CharField(max_length=1, choices=STRATEGY_CHOICES)
     next_button_xpath = models.CharField(max_length=500, null=True)
     next_button_expected_html = models.CharField(max_length=2000, null=True)
@@ -35,20 +36,23 @@ class Comic(models.Model):
         
     def checkNewEpisode(self):
         """Checks if a comic has a new episode, and, if so, update the comic"""
-        if self.strategy=="N":
+        if self.strategy == "N":
             last_episode = self.episode_set.order_by("-order")[0]
-            next_comic_data = parser.getNext(
+            next_comic_url = parser.getNext(
                 last_episode.url,
                 self.next_button_xpath,
                 self.next_button_expected_html,
-                self.episode_title_xpath
             )
-            if next_comic_data:
+            if next_comic_url:
                 e = Episode()
                 e.comic = self
                 e.order = last_episode.order + 1
-                e.url = next_comic_data[0]
-                e.title = next_comic_data[1]
+                e.url = next_comic_url
+                if self.episode_title_xpath:
+                    e.title = parser.getTextForXpath(next_comic_url, self.episode_title_xpath)
+                else:
+                    # TODO
+                    pass
                 e.save()
 
 class Episode(models.Model):
@@ -76,25 +80,49 @@ class User(models.Model):
         self.last_read_episodes.add(episode)
         
         
-def initNextBasedComic(name, url_episode_1, url_episode_2, url_episode_3, title_episode_2):
-    """Builds the objects for a new next-harvesting-based webcomic.
+def initNextBasedComic(name, key, url_episode_1, url_episode_2, url_episode_3, title_episode_2="", episode_title_xpath=""):
+    """Creates a new next-harvesting-based webcomic on the database.
     
     It needs the comic name, URL for the first three episodes and title for the third
     (to deduce the title xpath)
     
-    Objects are returned in a tuple (comic, episode1, episode2) and NOT persisted"""
+    It can search for the title xpath by receving the second episode's title, or receive
+    the xpath directly. If no xpath is supplied or searched, episodes will have
+    auto-generated titles. 
+    
+    Returns the newly created comic"""
+    
+    # Comic setup (finding the next button and, if needed, title xpath)
     c = Comic()
     c.name = name
+    c.key = key
     c.strategy = "N"
     links = parser.findLinks(url_episode_2, url_episode_3)
     if links:
-        (c.next_button_xpath,c.next_button_expected_html) = links[0]
+        (c.next_button_xpath, c.next_button_expected_html) = links[0]
     else:
         raise ValueError("Can't find link from " + url_episode_2 + " to " + url_episode_3)
-    (e1,e2) = (Episode(),Episode())
-    (e1.comic, e2.comic) = (c,c)
-    (e1.order, e2.order) = (1,2)
-    #(e1.title, e2.title) = (title_episode_1, title_episode_2)
-    # todo title xpath
-    return (c,e1,e2)
+    if not episode_title_xpath:
+        if title_episode_2:
+            episode_title_xpath = parser.findXpathFor(url_episode_2, title_episode_2)
+            if not episode_title_xpath:
+                raise ValueError("Can't find element containing title '" + title_episode_2 + "' at " + url_episode_2)
+    
+    # Initial episodes setup
+    (e1, e2) = (Episode(), Episode())
+    (e1.order, e2.order) = (1, 2)
+    (e1.url, e2.url) = (url_episode_1, url_episode_2)
+    if episode_title_xpath:
+        c.episode_title_xpath = episode_title_xpath
+        (e1.title, e2.title) = (parser.getTextForXpath(url_episode_1, episode_title_xpath),
+                                parser.getTextForXpath(url_episode_2, episode_title_xpath))
+    
+    # Persist the comic, then the episodes
+    # (the object association is lost if you do it before saving)
+    c.save()
+    (e1.comic, e2.comic) = (c, c)
+    e1.save()
+    e2.save()
+
+    return c
     
