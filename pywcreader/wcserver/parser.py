@@ -34,8 +34,7 @@ def getTextForXpath(source, xpath):
     """ Returns the space-stripped text from the element that matches that xpath on the source URL """
     with closing(urllib.urlopen(source)) as source_socket:
         tree = html.parse(source_socket, base_url=source)
-#        absolute_tree = html.document_fromstring(source_socket.read(), base_url=source)
-    return tree.xpath(xpath)[0].text.strip()
+    return tree.xpath(xpath)[0].text_content().strip()
 
 def getNext(source, xpath, expected_html):
     """ If the link in the xpath contains a link with the expected html and an href that does
@@ -48,8 +47,9 @@ def getNext(source, xpath, expected_html):
     links = source_html.xpath(xpath)
     if len(links) == 1:
         link = links[0]
-        if link.text == expected_html:
-            """ TODO: checar se nao e # """
+        if link.text == expected_html and \
+           "href" in link.attrib and \
+           link.attrib["href"].strip("# \n") != source.strip("# \n"):
             next = link.attrib["href"]
     source_socket.close()
     return next

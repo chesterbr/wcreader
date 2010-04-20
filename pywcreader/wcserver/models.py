@@ -54,6 +54,8 @@ class Comic(models.Model):
                     # TODO
                     pass
                 e.save()
+                return True            
+        return False
 
 class Episode(models.Model):
     """Each webcomic is divided in episodes, which are required to have unique URLs"""
