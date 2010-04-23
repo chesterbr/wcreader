@@ -5,8 +5,9 @@ from django.conf.urls.defaults import *
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^api/comics$', 'pywcreader.wcserver.views.listComics'),
-    (r'^api/episode/read$', 'pywcreader.wcserver.views.readEpisode'),
+    (r'^.*$', 'pywcreader.wcserver.views.dispatch'),
+#    (r'^api/comics$', 'pywcreader.wcserver.views.listComics'),
+#    (r'^api/episode/read$', 'pywcreader.wcserver.views.readEpisode'),
     # Example:
     # (r'^pywcreader/', include('pywcreader.foo.urls')),
 

@@ -2,6 +2,7 @@
 
 from django.db import models
 import parser
+from django.contrib.auth.models import User
 
 
 class Comic(models.Model):
@@ -67,8 +68,9 @@ class Episode(models.Model):
     def __unicode__(self):
         return self.comic.name + " - " + self.title
     
-class User(models.Model):
-    username = models.CharField(max_length=32)
+class UserProfile(models.Model):
+    """Users are stored on Django's facility. This class extends it to allow linking them to comics, episodes and such"""
+    user = models.ForeignKey(User, unique=True)    
     read_episodes = models.ManyToManyField(Episode, related_name="read_by_users")
     last_read_episodes = models.ManyToManyField(Episode, related_name="last_read_by_users")
     favorite_comics = models.ManyToManyField(Comic)
