@@ -7,12 +7,27 @@ import re
 
 def dispatch(request):
     """Translates the request into one of the operations defined below"""
-    if re.match(r"/user_.+/?", request.get_full_path()):
+    if re.match(r"/comics/?", request.path) and request.method == "GET":
+        return listAllComics(request);
+    if re.match(r"/user_.+?/", request.path):
         if request.method == "PUT":
             return createUser(request)
         elif request.method == "POST":
             return updateUser(request)
+    if re.match(r"/user_.+/comic_.+/read_episodes", request.path) and request.method == "GET":
+        return listReadEpisodes(request)
     return HttpResponse("<h1>Bad Request</h1>", status=400)
+
+def listAllComics(request):
+    """Lists all available comics"""
+    
+    comics = Comic.objects.all();
+    return HttpResponse(simplejson.dumps([{
+            "name" :  comic.name,
+            "home_url" : comic.home_url,
+            "id" : "comic_%d" % comic.id                               
+        } for comic in comics]))
+
 
 def createUser(request):
     """Initializes a new user on the system"""
@@ -35,6 +50,19 @@ def createUser(request):
 def updateUser(request):
     """Updates an user's data"""
     pass
+
+def listReadEpisodes(request):
+    try:
+        comic = Comic.objects.filter(id=getComic_id(request))[0]
+        user = User.objects.filter(username=getUsername(request))[0]
+    except ObjectDoesNotExist:
+        return HttpResponse("Comic or user not found", status=404)
+    
+    return HttpResponse(simplejson.dumps([{
+            "title" : episode.title,
+            "url" : episode.url
+         } for episode in user.profile.read_episodes.filter(comic=comic)]))
+    
 
 def lastEpisode(request):
     """Retrieves the last episode read from a comic for the current user.
@@ -62,19 +90,19 @@ def readEpisode(request):
 
     user.read(episode)
     
-def listComics(request):
-    """Lists all available comics"""
-    
-    comics = Comic.objects.all();
-    return HttpResponse(simplejson.dumps([{
-            "name" :  comic.name,
-            "key" :comic.key                               
-        } for comic in comics]))
     
 
 def getUsername(request):
     """Returns the username from the current request, or None if none found"""
-    mo = re.match(r"/user_(.+)/?", request.get_full_path())
+    mo = re.search(r"/user_(.+?)/", request.path)
+    if mo:
+        return mo.group(1)
+    else:
+        return None
+        
+def getComic_id(request):
+    """Returns the comic ID from the current request, or None if none found"""
+    mo = re.search(r"/comic_(.+?)/", request.path)
     if mo:
         return mo.group(1)
     else:

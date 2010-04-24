@@ -24,7 +24,7 @@ class Comic(models.Model):
         ("U", "URL pattern")
     )
     name = models.CharField(max_length=255)
-    key = models.CharField(max_length=20)
+    home_url = models.CharField(max_length=2000, null=False);
     strategy = models.CharField(max_length=1, choices=STRATEGY_CHOICES)
     next_button_xpath = models.CharField(max_length=500, null=True)
     next_button_expected_html = models.CharField(max_length=2000, null=True)
@@ -84,7 +84,7 @@ class UserProfile(models.Model):
         self.last_read_episodes.add(episode)
         
         
-def initNextBasedComic(name, key, url_episode_1, url_episode_2, url_episode_3, title_episode_2="", episode_title_xpath=""):
+def initNextBasedComic(name, home_url, url_episode_1, url_episode_2, url_episode_3, title_episode_2="", episode_title_xpath=""):
     """Creates a new next-harvesting-based webcomic on the database.
     
     It needs the comic name, URL for the first three episodes and title for the third
@@ -99,7 +99,7 @@ def initNextBasedComic(name, key, url_episode_1, url_episode_2, url_episode_3, t
     # Comic setup (finding the next button and, if needed, title xpath)
     c = Comic()
     c.name = name
-    c.key = key
+    c.home_url = home_url
     c.strategy = "N"
     links = parser.findLinks(url_episode_2, url_episode_3)
     if links:
@@ -129,4 +129,8 @@ def initNextBasedComic(name, key, url_episode_1, url_episode_2, url_episode_3, t
     e2.save()
 
     return c
+    
+"""Cool trick: auto-create user profiles when they are accessed.
+   from: http://www.djangorocks.com/hints-and-tips/automatically-create-a-django-profile.html"""    
+User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
     

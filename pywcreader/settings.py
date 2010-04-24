@@ -87,6 +87,8 @@ INSTALLED_APPS = (
     'pywcreader.wcserver'
 )
 
+AUTH_PROFILE_MODULE = 'wcserver.UserProfile'
+
 #import local settings, if any
 try:
 	from settings_local import *
