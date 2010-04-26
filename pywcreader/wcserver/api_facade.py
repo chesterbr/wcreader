@@ -2,7 +2,7 @@ import re
 from django.http import HttpResponse
 from django.utils import simplejson
 from django.contrib.auth.models import User
-from wcserver.models import Comic, Episode
+from models import Comic, Episode
 
 def http_ok():
     return HttpResponse("Ok")

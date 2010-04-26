@@ -5,7 +5,7 @@ from django.utils import simplejson, datastructures
 from django.contrib.auth.models import User
 import re
 from pywcreader.wcserver import api_facade
-from wcserver.models import Comic, Episode
+from models import Comic, Episode
 
 def dispatch(request):
     """Translates the request into one of the operations defined below"""
