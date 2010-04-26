@@ -2,109 +2,73 @@
 from django.http import Http404, HttpResponse, HttpResponseNotFound, QueryDict
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import simplejson, datastructures
-from models import Comic, Episode, User
+from django.contrib.auth.models import User
 import re
+from pywcreader.wcserver import api_facade
+from wcserver.models import Comic, Episode
 
 def dispatch(request):
     """Translates the request into one of the operations defined below"""
-    if re.match(r"/comics/?", request.path) and request.method == "GET":
-        return listAllComics(request);
-    if re.match(r"/user_.+?/", request.path):
-        if request.method == "PUT":
-            return createUser(request)
-        elif request.method == "POST":
-            return updateUser(request)
-    if re.match(r"/user_.+/comic_.+/read_episodes", request.path) and request.method == "GET":
-        return listReadEpisodes(request)
-    return HttpResponse("<h1>Bad Request</h1>", status=400)
-
-def listAllComics(request):
-    """Lists all available comics"""
     
-    comics = Comic.objects.all();
-    return HttpResponse(simplejson.dumps([{
-            "name" :  comic.name,
-            "home_url" : comic.home_url,
-            "id" : "comic_%d" % comic.id                               
-        } for comic in comics]))
-
-
-def createUser(request):
-    """Initializes a new user on the system"""
-    username = getUsername(request)
-    if not re.match("^[a-zA-Z0-9_]{1,15}$", username):
-        return HttpResponse("Invalid username (wanted alphanmeric 1-15 chars, got " + username + ")", status=400)
-    if User.objects.filter(username=username):
-        return HttpResponse("Username already on the database, use POST to modify", status=400)
-    PUT = QueryDict(request.raw_post_data, encoding=request.encoding)    
-    if (not "password" in PUT) or (not PUT["password"]):
-        return HttpResponse("Please supply a non-empty password", status=400)
-    password = PUT["password"]
-    if "email" in PUT:
-        email = PUT["email"]
-    else:
-        email = ""
-    User.objects.create_user(username, email, password)
-    return HttpResponse("<h1>Ok</h1>")
-
-def updateUser(request):
-    """Updates an user's data"""
-    pass
-
-def listReadEpisodes(request):
-    try:
-        comic = Comic.objects.filter(id=getComic_id(request))[0]
-        user = User.objects.filter(username=getUsername(request))[0]
-    except ObjectDoesNotExist:
-        return HttpResponse("Comic or user not found", status=404)
+    # Get the components from URL (with related objects), and body parameters 
+    path = request.path + ("/" if request.path[-1] != "/" else "")
+    mo_user = re.search(r"/user_(.+?)/", path)
+    mo_comic = re.search(r"/comic_(.+?)/", path)
+    mo_episode = re.search(r"/episode_(.+?)/", path)
+    user = comic = episode = None
+    username = ""
+    if mo_user:
+        username = mo_user.group(1)
+        if not re.match("^[a-zA-Z0-9_]{1,15}$", username):
+            return HttpResponse("Invalid username (wanted alphanmeric 1-15 chars, got " + username + ")", status=400)
+        users = User.objects.filter(username=username)
+        if users:
+            user = users[0]
+    if mo_comic:
+        comics = Comic.objects.filter(id=mo_comic.group(1))
+        if comics:
+            comic = comics[0]
+    if mo_episode:
+        episodes = Episode.objects.filter(id=mo_episode.group(1))
+        if episodes:
+            episode = episodes[0]
+    params = QueryDict(request.raw_post_data, encoding=request.encoding)
     
-    return HttpResponse(simplejson.dumps([{
-            "title" : episode.title,
-            "url" : episode.url
-         } for episode in user.profile.read_episodes.filter(comic=comic)]))
+    # Dispath
+    if re.match(r"^/comics/?$", path) and request.method == "GET":
+        return api_facade.listAllComics();
+    if re.match(r"^/user_"+username+"/$", path) and request.method == "PUT":
+        return user_exists(user) or api_facade.createUser(username, params)
+    if re.match(r"^/user_"+username+"/comic_[0-9]+?/read_episodes/$", path) and request.method == "GET":
+        return user_missing(user) or comic_missing(comic) or api_facade.listReadEpisodes(user, comic)
+    if re.match(r"^/user_.+?/episode_[0-9]+?/$", path) and request.method == "PUT":
+        return user_missing(user) or episode_missing(episode) or api_facade.readEpisode(user, episode)
+    if re.match(r"^/user_.+?/episode_[0-9]+?/$", path) and request.method == "DELETE":
+        return user_missing(user) or episode_missing(episode) or api_facade.unreadEpisode(user, episode)
+    if re.match(r"^/comic_[0-9]+?/episodes/$", path) and request.method == "GET":
+        return comic_missing(comic) or api_facade.listEpisodes(comic)
     
+#    if re.match(r"^/user_.+?/$", path) and request.method == "POST":
+#        return user_missing(user) or api_facade.updateUser(user, params)
+#    if re.match(r"^/user_.+?/comics/$", path) and request.method == "GET":
+#        return user_missing(user) or api_facade.listFavoriteComics(user)
 
-def lastEpisode(request):
-    """Retrieves the last episode read from a comic for the current user.
-    
-    Comic is identified by its ID"""
-    try:
-        comic = Comic.objects.get(id=request.REQUEST["id"])
-        user = User.objects.get(username=request.REQUEST["username"])
-    except ObjectDoesNotExist:
-        raise Http404 # melhorar isso
-    
-    last = user.last_read_episodes.filter(comic=comic)
-    if last:
-        return last[0]
-        
-        
-def readEpisode(request):
-    """Marks an episode as 'read' by the user (by means of its URL)"""
-    
-    try:
-        episode = Episode.objects.get(url=request.REQUEST["url"])
-        user = User.objects.get(username=request.REQUEST["username"])
-    except ObjectDoesNotExist:
-        raise Http404 # melhorar isso
+    return HttpResponse("Bad Request (check API docs)", status=400)
 
-    user.read(episode)
-    
-    
+# Helper methods for condition checking on the dispatcher
 
-def getUsername(request):
-    """Returns the username from the current request, or None if none found"""
-    mo = re.search(r"/user_(.+?)/", request.path)
-    if mo:
-        return mo.group(1)
-    else:
-        return None
-        
-def getComic_id(request):
-    """Returns the comic ID from the current request, or None if none found"""
-    mo = re.search(r"/comic_(.+?)/", request.path)
-    if mo:
-        return mo.group(1)
-    else:
-        return None
-        
+def user_missing(user):
+    """ If the user is missing, returns an error """
+    return HttpResponse("Username not found", status=400) if not user else None 
+
+def comic_missing(comic):
+    """ If the user is missing, returns an error """
+    return HttpResponse("Comic not found", status=400) if not comic else None 
+
+def episode_missing(episode):
+    """ If the episode is missing, returns an error """
+    return HttpResponse("Episode not found", status=400) if not episode else None 
+
+def user_exists(user):
+    """ If the user exists, returns an error """
+    return HttpResponse("Username already on the database, use POST to modify", status=400) if user else None

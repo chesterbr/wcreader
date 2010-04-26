@@ -1,9 +1,6 @@
-﻿# coding=UTF-8
-
-from django.db import models
+﻿from django.db import models
 import parser
 from django.contrib.auth.models import User
-
 
 class Comic(models.Model):
     """A webcomic (e.g.: "xkcd", "Questionable Content").
@@ -76,12 +73,16 @@ class UserProfile(models.Model):
     favorite_comics = models.ManyToManyField(Comic)
     
     def read(self, episode):
-        """Marks an episode as "read" """
+        """Marks an episode as "read" (also making it the last-read-episode) """
         self.read_episodes.add(episode)
         last_read = self.last_read_episodes.filter(comic=episode.comic)
         if last_read:
             self.last_read_episodes.remove(last_read[0])
         self.last_read_episodes.add(episode)
+        
+    def unread(self, episode):
+        """Removes the "read" status from an episode (without affecting the last-read)"""
+        self.read_episodes.remove(episode)
         
         
 def initNextBasedComic(name, home_url, url_episode_1, url_episode_2, url_episode_3, title_episode_2="", episode_title_xpath=""):
