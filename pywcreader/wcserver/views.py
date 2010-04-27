@@ -84,7 +84,7 @@ def user_invalid(user, username, request):
         if len(auth) == 2:
             if auth[0].lower() == "basic":
                 uname, passwd = base64.b64decode(auth[1]).split(':')
-                if (uname == username) and user.check_password(passwd):
+                if (uname == username) and user and user.check_password(passwd):
                     return None
     # If no valid credentials were found, ask the user-agent for valid ones                
     response = HttpResponse("Please supply valid credentials for " + username, status=401)
