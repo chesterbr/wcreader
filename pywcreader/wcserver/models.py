@@ -21,7 +21,7 @@ class Comic(models.Model):
         ("U", "URL pattern")
     )
     name = models.CharField(max_length=255)
-    home_url = models.CharField(max_length=2000, null=False);
+    home_url = models.CharField(max_length=2000, null=False, db_index=True);
     strategy = models.CharField(max_length=1, choices=STRATEGY_CHOICES)
     next_button_xpath = models.CharField(max_length=500, null=True)
     next_button_expected_html = models.CharField(max_length=2000, null=True)
@@ -60,10 +60,15 @@ class Episode(models.Model):
     comic = models.ForeignKey(Comic)
     order = models.IntegerField()
     title = models.CharField(max_length=500)
-    url = models.CharField(max_length=2000)
+    url = models.CharField(max_length=2000, db_index=True)
     
     def __unicode__(self):
         return self.comic.name + " - " + self.title
+    
+    def next(self):
+        """Returns the "next" episode, if available"""
+        episodes = Episode.objects.filter(comic=self.comic).filter(order=self.order + 1)
+        return episodes[0] if episodes else None
     
 class UserProfile(models.Model):
     """Users are stored on Django's facility. This class extends it to allow linking them to comics, episodes and such"""

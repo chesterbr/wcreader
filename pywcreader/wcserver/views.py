@@ -40,14 +40,22 @@ def dispatch(request):
     # Dispatch
     if re.match(r"^/comics/?$", path) and request.method == "GET":
         return api_facade.listAllComics();
-    if re.match(r"^/episode/?$", path) and request.method == "GET":
-        return no_url(url) or api_facade.getEpisodeByUrl(url)
-    if re.match(r"^/comic/?$", path) and request.method == "GET":
+    if re.match(r"^/comic/$", path) and request.method == "GET":
         return no_url(url) or api_facade.getComicByUrl(url)
     if re.match(r"^/comic_[0-9]+?/episodes/$", path) and request.method == "GET":
         return comic_missing(comic) or api_facade.listEpisodes(comic)
+    if re.match(r"^/episode/$", path) and request.method == "GET":
+        return no_url(url) or api_facade.getEpisodeByUrl(url)    
+    if re.match(r"^/episode_[0-9]+?/$", path) and request.method == "GET":
+        return episode_missing(episode) or api_facade.getEpisode(episode)
     if re.match(r"^/user_" + username + "/$", path) and request.method == "PUT":
         return user_exists(user) or api_facade.createUser(username, params)
+    if re.match(r"^/user_" + username + "/comics/$", path) and request.method == "GET":
+        return user_invalid(user, username, request) or api_facade.listFavoriteComics(user)
+    if re.match(r"^/user_" + username + "/comic_[0-9]+?/$", path) and request.method == "PUT":
+        return user_invalid(user, username, request) or comic_missing(comic) or api_facade.addFavorite(user, comic)
+    if re.match(r"^/user_" + username + "/comic_[0-9]+?/$", path) and request.method == "DELETE":
+        return user_invalid(user, username, request) or comic_missing(comic) or api_facade.removeFavorite(user, comic)
     if re.match(r"^/user_" + username + "/comic_[0-9]+?/read_episodes/$", path) and request.method == "GET":
         return user_invalid(user, username, request) or comic_missing(comic) or api_facade.listReadEpisodes(user, comic)
     if re.match(r"^/user_" + username + "/episode_[0-9]+?/$", path) and request.method == "PUT":
@@ -57,8 +65,6 @@ def dispatch(request):
     
 #    if re.match(r"^/user_.+?/$", path) and request.method == "POST":
 #        return user_missing(user) or api_facade.updateUser(user, params)
-#    if re.match(r"^/user_.+?/comics/$", path) and request.method == "GET":
-#        return user_missing(user) or api_facade.listFavoriteComics(user)
 
     return HttpResponse("Bad Request (check API docs)", status=400)
 

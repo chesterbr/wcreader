@@ -5,8 +5,9 @@
 #
 # Instead, add them to settings_local.py and they will overwrite whatever is on this file,
 # but will not be pushed to other developers (since that file is on .gitignore)
+import os
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -73,10 +74,15 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'pywcreader.urls'
 
+# Added to allow relative paths below, see:
+# http://morethanseven.net/2009/02/11/django-settings-tip-setting-relative-paths.html
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(SITE_ROOT, 'templates')
 )
 
 INSTALLED_APPS = (
