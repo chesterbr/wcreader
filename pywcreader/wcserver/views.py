@@ -34,11 +34,16 @@ def dispatch(request):
         episodes = Episode.objects.filter(id=mo_episode.group(1))
         if episodes:
             episode = episodes[0]
-    params = QueryDict(request.raw_post_data, encoding=request.encoding)    
+    params = QueryDict(request.raw_post_data, encoding=request.encoding)
+    url = request.GET["url"] if "url" in request.GET else None
         
     # Dispatch
     if re.match(r"^/comics/?$", path) and request.method == "GET":
         return api_facade.listAllComics();
+    if re.match(r"^/episode/?$", path) and request.method == "GET":
+        return no_url(url) or api_facade.getEpisodeByUrl(url)
+    if re.match(r"^/comic/?$", path) and request.method == "GET":
+        return no_url(url) or api_facade.getComicByUrl(url)
     if re.match(r"^/comic_[0-9]+?/episodes/$", path) and request.method == "GET":
         return comic_missing(comic) or api_facade.listEpisodes(comic)
     if re.match(r"^/user_" + username + "/$", path) and request.method == "PUT":
@@ -57,7 +62,9 @@ def dispatch(request):
 
     return HttpResponse("Bad Request (check API docs)", status=400)
 
-# Helper methods for condition checking on the dispatcher
+# Helper methods for validating parameters and conditions
+# They either return an error response, or none, allowing chained returns like:
+#     return cond1() or cond2() or cond3() or desired_result()
 
 def user_invalid(user, username, request):
     """ Returns an appropriate response if the username does not exist or is not authenticated """
@@ -73,7 +80,11 @@ def user_invalid(user, username, request):
     # If no valid credentials were found, ask the user-agent for valid ones                
     response = HttpResponse("Please supply valid credentials for " + username, status=401)
     response['WWW-Authenticate'] = 'Basic realm="wcreader"'
-    return response    
+    return response
+
+def no_url(url):
+    """ If there is no url GET parameter, returns an error """
+    return HttpResponse("Please supply an URL", status=400) if not url else None     
 
 def comic_missing(comic):
     """ If the comic is missing, returns an error """
