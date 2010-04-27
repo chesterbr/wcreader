@@ -21,9 +21,14 @@ def createUser(username, params):
     User.objects.create_user(username, email, password)
     return _HttpResponseOk()
 
-def updateUser(request):
+def modifyUser(user, params):
     """Updates an user's data"""
-    pass
+    if "email" in params:
+        user.email = params["email"]
+    if "password" in params:
+        user.set_password(params["password"])
+    user.save()
+    return _HttpResponseOk()
 
 def listFavoriteComics(user):
     """List a user's favorite comics"""

@@ -50,6 +50,8 @@ def dispatch(request):
         return episode_missing(episode) or api_facade.getEpisode(episode)
     if re.match(r"^/user_" + username + "/$", path) and request.method == "PUT":
         return user_exists(user) or api_facade.createUser(username, params)
+    if re.match(r"^/user_" + username + "/$", path) and request.method == "POST":
+        return user_invalid(user, username, request) or api_facade.modifyUser(user, params)
     if re.match(r"^/user_" + username + "/comics/$", path) and request.method == "GET":
         return user_invalid(user, username, request) or api_facade.listFavoriteComics(user)
     if re.match(r"^/user_" + username + "/comic_[0-9]+?/$", path) and request.method == "PUT":
