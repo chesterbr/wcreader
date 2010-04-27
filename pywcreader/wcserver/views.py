@@ -13,7 +13,8 @@ def dispatch(request):
     """Translates the request into one of the operations defined below"""
 
     # Get the components from URL (with related objects), and body parameters 
-    path = request.path + ("/" if request.path[-1] != "/" else "")
+    path = request.path[4:] # this is to strip "/api"
+    path = path + ("/" if path[-1] != "/" else "")
     mo_user = re.search(r"/user_(.+?)/", path)
     mo_comic = re.search(r"/comic_(.+?)/", path)
     mo_episode = re.search(r"/episode_(.+?)/", path)
@@ -68,7 +69,7 @@ def dispatch(request):
 #    if re.match(r"^/user_.+?/$", path) and request.method == "POST":
 #        return user_missing(user) or api_facade.updateUser(user, params)
 
-    return HttpResponse("Bad Request (check API docs)", status=400)
+    return HttpResponse('<html><body>Bad Request (please check <a href="http://wcreader.com/wiki/index.php?title=API)">API docs</a>)</body></html>', status=400)
 
 # Helper methods for validating parameters and conditions
 # They either return an error response, or none, allowing chained returns like:
